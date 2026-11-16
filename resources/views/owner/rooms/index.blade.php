@@ -51,7 +51,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
-                            <th class="px-6 py-3.5">Nomor & Name Kamar</th>
+                            <th class="px-6 py-3.5">Nomor & Tipe Kamar</th>
                             <th class="px-6 py-3.5">Harga Sewa / Bulan</th>
                             <th class="px-6 py-3.5">Fasilitas / Deskripsi</th>
                             <th class="px-6 py-3.5">Status</th>
@@ -64,7 +64,7 @@
                                 <!-- Nomor Kamar -->
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-slate-900">Kamar {{ $room->room_number }}</div>
-                                    <div class="text-xs text-slate-500">{{ $room->name ?? 'Tipe Standar' }}</div>
+                                    <div class="text-xs text-slate-500">{{ $room->type ?? $room->name ?? 'Tipe Standar' }}</div>
                                 </td>
 
                                 <!-- Harga Sewa -->
@@ -84,6 +84,11 @@
                                             <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                             Terisi
                                         </span>
+                                    @elseif ($room->status === 'maintenance')
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                            Perbaikan
+                                        </span>
                                     @else
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -102,7 +107,6 @@
                                             </button>
                                         </form>
                                     @elseif ($room->status === 'available' || !isset($room->is_occupied) || !$room->is_occupied)
-                                        <!-- Perbaikan nama rute di baris ini -->
                                         <form action="{{ route('owner.rooms.destroy', $room->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kamar ini?')">
                                             @csrf
                                             @method('DELETE')
@@ -144,14 +148,17 @@
             <form action="{{ route('owner.rooms.store') }}" method="POST" class="p-6 space-y-4">
                 @csrf
 
+                <!-- Default Status Available -->
+                <input type="hidden" name="status" value="available">
+
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Nomor Kamar</label>
                     <input type="text" name="room_number" placeholder="Contoh: 101, A-02" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Nama Tipe Kamar (Opsional)</label>
-                    <input type="text" name="name" placeholder="Contoh: Deluxe AC / VIP Balkon" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Tipe Kamar</label>
+                    <input type="text" name="type" placeholder="Contoh: Sederhana / Executive / Standard" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required>
                 </div>
 
                 <div>
