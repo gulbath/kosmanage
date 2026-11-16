@@ -1,17 +1,30 @@
-FROM richarvey/nginx-php-fpm:latest
+FROM php:8.3-cli
 
-COPY . /var/www/html
+# Install ekstensi PHP yang dibutuhkan Laravel & MySQL
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libzip-dev \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-ENV WEBROOT=/var/www/html/public
-ENV PHP_ERRORS_STDERR=1
-ENV RUN_CLI=0
-ENV REAL_IP_HEADER=1
-ENV COMPOSER_ALLOW_SUPERUSER=1
-ENV SKIP_COMPOSER=1
+# Copy Composer resmi
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install dependency saat proses build & atur izin folder storage
-RUN composer install --no-dev --prefer-dist --optimize-autoloader --ignore-platform-reqs && \
-    chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
+WORKDIR /var/www/html
 
-# Sesuaikan port Nginx secara dinamis dengan $PORT EthioDeploy sebelum web server berjalan
-CMD ["/bin/sh", "-c", "sed -i \"s/listen [0-9]*;/listen ${PORT:-80};/g\" /etc/nginx/sites-available/default.conf /etc/nginx/sites-enabled/* 2>/dev/null && /start.sh"]
+# Copy seluruh source code
+COPY . .
+
+# Install dependensi Laravel PHP 8.3
+RUN composer install --no-dev --prefer-dist --optimize-autoloader
+
+# Atur izin akses folder storage & cache
+RUN chmod -R 777 storage bootstrap/cache
+
+# Jalankan server yang langsung mendengarkan 0.0.0.0 dan port dinamis $PORT dari EthioDeploy
+CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
