@@ -79,5 +79,10 @@ Route::middleware('auth')->group(function () {
         Route::post('bills/{bill}/confirm', [TenantBillController::class, 'confirmPayment'])->name('bills.confirm');
         Route::get('/rooms', [App\Http\Controllers\Tenant\TenantBookingController::class, 'index'])->name('rooms.index');
         Route::post('/rooms/{room}/book', [App\Http\Controllers\Tenant\TenantBookingController::class, 'store'])->name('rooms.book');
+
+
+    Route::get('/healthz', function () {
+        return response('OK', 200);
+    });
     });
 });
