@@ -1,30 +1,30 @@
 FROM php:8.3-cli
 
-# Install ekstensi PHP yang dibutuhkan Laravel & MySQL
+# Copy extension installer yang sudah terkompilasi
+COPY --from=mlocati/docker-php-extension-installer:latest /usr/bin/install-php-extensions /usr/local/bin/
+
+# Install sistem dependency esensial
 RUN apt-get update && apt-get install -y \
     git \
     curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
     zip \
     unzip \
-    libzip-dev \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy Composer resmi
+# Install ekstensi PHP menggunakan pre-compiled binaries (cepat & hemat resource)
+RUN install-php-extensions pdo_mysql mbstring exif pcntl bcmath gd zip
+
+# Copy Composer dari official image
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+WORKDIR /var/www
 
-# Copy seluruh source code
+# Copy kode aplikasi
 COPY . .
 
-# Install dependensi Laravel PHP 8.3
-RUN composer install --no-dev --prefer-dist --optimize-autoloader
+# Install dependency composer tanpa dev packages
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Atur izin akses folder storage & cache
-RUN chmod -R 777 storage bootstrap/cache
+EXPOSE 8000
 
-# Jalankan server yang langsung mendengarkan 0.0.0.0 dan port dinamis $PORT dari EthioDeploy
-CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
